@@ -1,6 +1,7 @@
 import configparser
 import json
 import asyncio
+import re
 from datetime import datetime
 import os
 
@@ -18,6 +19,11 @@ class DateTimeEncoder(json.JSONEncoder):
             return list(o)
 
         return json.JSONEncoder.default(self, o)
+
+# Function to remove links from the message text
+def remove_links(text):
+    url_pattern = re.compile(r'https?://\S+|www\.\S+')
+    return url_pattern.sub(r'', text)
 
 async def main(api_id, api_hash, phone, username):
     # Create the client and connect
@@ -42,7 +48,6 @@ async def main(api_id, api_hash, phone, username):
             return
     
     # Get the provider channel entity
-    # provider_channel_input = input('Enter provider channel entity (Telegram URL or entity id): ')
     provider_channel_input = config['Telegram']['provider_channel_entity']
 
     try:
@@ -63,11 +68,14 @@ async def main(api_id, api_hash, phone, username):
             # Fetch entity ID for your channel using its username
             my_channel_entity = await client.get_entity(my_channel_id)
             
+            # Remove links from the message text
+            clean_message_text = remove_links(message_text)
+            
             # Send message with photo if available
             if photo:
-                await client.send_file(my_channel_entity, photo, caption=message_text)
+                await client.send_file(my_channel_entity, photo, caption=clean_message_text)
             else:
-                await client.send_message(my_channel_entity, message_text)
+                await client.send_message(my_channel_entity, clean_message_text)
             print("Message sent to my channel successfully.")
         except Exception as e:
             print(f"Failed to send message to my channel: {e}")
