@@ -23,7 +23,6 @@ async def main(api_id, api_hash, phone, username):
     # Create the client and connect
     client = TelegramClient(username, api_id, api_hash)
     await client.start()
-    print("Client Created")
     
     # Ensure you're authorized
     if await client.is_user_authorized() == False:
@@ -43,7 +42,8 @@ async def main(api_id, api_hash, phone, username):
             return
     
     # Get the provider channel entity
-    provider_channel_input = input('Enter provider channel entity (Telegram URL or entity id): ')
+    # provider_channel_input = input('Enter provider channel entity (Telegram URL or entity id): ')
+    provider_channel_input = config['Telegram']['provider_channel_entity']
 
     try:
         # Attempt to parse as integer (channel ID)
@@ -113,5 +113,4 @@ api_hash = config['Telegram']['api_hash']
 phone = config['Telegram']['phone']
 username = config['Telegram']['username']
 
-# Run the main function within the client's context
 asyncio.run(main(api_id, api_hash, phone, username))
