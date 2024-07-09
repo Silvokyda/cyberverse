@@ -1,4 +1,4 @@
-import configparser
+import os
 import json
 import asyncio
 import re
@@ -25,7 +25,7 @@ def remove_links(text):
     url_pattern = re.compile(r'https?://\S+|www\.\S+')
     return url_pattern.sub(r'', text)
 
-async def main(api_id, api_hash, phone, username):
+async def main(api_id, api_hash, phone, username, provider_channel_entity, my_channel_id):
     # Create the client and connect
     client = TelegramClient(username, api_id, api_hash)
     await client.start()
@@ -48,23 +48,17 @@ async def main(api_id, api_hash, phone, username):
             return
     
     # Get the provider channel entity
-    provider_channel_input = config['Telegram']['provider_channel_entity']
-
     try:
-        # Attempt to parse as integer (channel ID)
-        provider_entity = PeerChannel(int(provider_channel_input))
+        provider_entity = PeerChannel(int(provider_channel_entity))
     except ValueError:
         # If not an integer, treat it as a username or URL
-        provider_entity = provider_channel_input
+        provider_entity = provider_channel_entity
 
     provider_channel = await client.get_entity(provider_entity)
 
     # Function to send a message to your channel
     async def send_message_to_my_channel(message_text, photo=None):
         try:
-            # Read my channel ID from config
-            my_channel_id = config['Telegram']['my_channel_id']
-            
             # Fetch entity ID for your channel using its username
             my_channel_entity = await client.get_entity(my_channel_id)
             
@@ -106,19 +100,18 @@ async def main(api_id, api_hash, phone, username):
             # Send the message (without photo) to your channel
             await send_message_to_my_channel(message.text)
 
-    print(f"Listening for new messages in provider channel: {provider_channel_input}...")
+    print(f"Listening for new messages in provider channel: {provider_channel_entity}...")
     
     # Run event loop
     await client.run_until_disconnected()
 
-# Read configuration from file
-config = configparser.ConfigParser()
-config.read("config.ini")
+# Retrieve configuration values from environment variables
+api_id = int(os.getenv('TELEGRAM_API_ID'))
+api_hash = os.getenv('TELEGRAM_API_HASH')
+phone = os.getenv('TELEGRAM_PHONE')
+username = os.getenv('TELEGRAM_USERNAME')
+provider_channel_entity = os.getenv('PROVIDER_CHANNEL_ENTITY')
+my_channel_id = os.getenv('MY_CHANNEL_ID')
 
-# Retrieve configuration values
-api_id = config['Telegram']['api_id']
-api_hash = config['Telegram']['api_hash']
-phone = config['Telegram']['phone']
-username = config['Telegram']['username']
-
-asyncio.run(main(api_id, api_hash, phone, username))
+# Run the main function within the client's context
+asyncio.run(main(api_id, api_hash, phone, username, provider_channel_entity, my_channel_id))
