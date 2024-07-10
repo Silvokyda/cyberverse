@@ -3,7 +3,7 @@ import json
 import asyncio
 import re
 from datetime import datetime
-import os
+import configparser  # Importing configparser module
 
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
@@ -105,13 +105,16 @@ async def main(api_id, api_hash, phone, username, provider_channel_entity, my_ch
     # Run event loop
     await client.run_until_disconnected()
 
-# Retrieve configuration values from environment variables
-api_id = int(os.getenv('TELEGRAM_API_ID'))
-api_hash = os.getenv('TELEGRAM_API_HASH')
-phone = os.getenv('TELEGRAM_PHONE')
-username = os.getenv('TELEGRAM_USERNAME')
-provider_channel_entity = os.getenv('PROVIDER_CHANNEL_ENTITY')
-my_channel_id = os.getenv('MY_CHANNEL_ID')
+# Configuration and utility functions
+config = configparser.ConfigParser()
+config.read("config.ini")
+
+api_id = config['Telegram']['api_id']
+api_hash = config['Telegram']['api_hash']
+phone = config['Telegram']['phone']
+username = config['Telegram']['username']
+provider_channel_entity = config['Telegram']['provider_channel_entity']
+my_channel_id = config['Telegram']['my_channel_id']
 
 # Run the main function within the client's context
 asyncio.run(main(api_id, api_hash, phone, username, provider_channel_entity, my_channel_id))
